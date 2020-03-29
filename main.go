@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 )
@@ -14,6 +15,11 @@ type task struct {
 	ID      int    `json: ID`
 	Name    string `json: Name`
 	Content string `json: Content`
+}
+
+type resp struct {
+	status int    `json: status`
+	msg    string `json: msg`
 }
 
 type allTasks []task
@@ -51,6 +57,47 @@ func createTask(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(newTask)
 }
 
+func getTask(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	// get parameters of url
+	parameters := mux.Vars(r)
+	taskID, err := strconv.Atoi(parameters["id"])
+	if err != nil {
+		fmt.Fprintf(w, "Id invalido")
+		return
+	}
+	for _, task := range tasks {
+		if task.ID == taskID {
+			json.NewEncoder(w).Encode(task)
+			return
+		}
+	}
+	response := resp{
+		status: 200,
+		msg:    "No hay tarea con este id",
+	}
+	json.NewEncoder(w).Encode(response)
+}
+
+func deleteTask(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	// get parameters of url
+	parameters := mux.Vars(r)
+	taskID, err := strconv.Atoi(parameters["id"])
+	if err != nil {
+		fmt.Fprintf(w, "Id invalido")
+		return
+	}
+	for i, task := range tasks {
+		if task.ID == taskID {
+			tasks = append(tasks[:i], tasks[i+i:]...)
+			fmt.Fprintf(w, "La tarea ha sido eliminado correctamente")
+			return
+		}
+	}
+
+}
+
 func main() {
 	// Configuración inicial de la ruta
 	router := mux.NewRouter().StrictSlash(true)
@@ -59,6 +106,8 @@ func main() {
 	router.HandleFunc("/", indexRoute)
 	router.HandleFunc("/tasks", getTasks)
 	router.HandleFunc("/task", createTask).Methods("POST")
+	router.HandleFunc("/task/{id}", getTask).Methods("GET")
+	router.HandleFunc("/task/{id}", deleteTask).Methods("DELETE")
 
 	// Iniciando un servicdor
 	log.Fatal(http.ListenAndServe(":3000", router))
