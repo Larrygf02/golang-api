@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -25,7 +26,11 @@ var tasks = allTasks{
 }
 
 func indexRoute(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Bienvenido API en go")
+	fmt.Fprintf(w, "Bienvenido API en golang")
+}
+
+func getTasks(w http.ResponseWriter, r *http.Request) {
+	json.NewEncoder(w).Encode(tasks)
 }
 
 func main() {
@@ -34,8 +39,8 @@ func main() {
 
 	// Definiendo una ruta
 	router.HandleFunc("/", indexRoute)
+	router.HandleFunc("/tasks", getTasks)
 
 	// Iniciando un servicdor
-	// logs
 	log.Fatal(http.ListenAndServe(":3000", router))
 }
