@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
@@ -135,7 +136,12 @@ func main() {
 	router.HandleFunc("/task/{id}", getTask).Methods("GET")
 	router.HandleFunc("/task/{id}", deleteTask).Methods("DELETE")
 	router.HandleFunc("/task/{id}", updateTask).Methods("PUT")
-
+	cors := handlers.CORS(
+		handlers.AllowedHeaders([]string{"content-type"}),
+		handlers.AllowedOrigins([]string{"*"}),
+		handlers.AllowCredentials(),
+	)
+	router.Use(cors)
 	// Iniciando un servicdor
-	log.Fatal(http.ListenAndServe(":3000", router))
+	log.Fatal(http.ListenAndServe(":5000", router))
 }
